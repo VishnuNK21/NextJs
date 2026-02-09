@@ -7,7 +7,7 @@ import postgres from 'postgres';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const sql = postgres(process.env.POSTGRES_URL_NON_POOLING!, { ssl: 'require' });
 
 const FormSchema = z.object({
     id: z.string(),
@@ -120,10 +120,12 @@ export async function updateInvoice(
 export async function deleteInvoice(id: string) {
     try {
         await sql`DELETE FROM invoices WHERE id = ${id}`;
-        revalidatePath('/dashboard/invoices');
     } catch (error) {
         console.error('Database Error: Failed to Delete Invoice.', error);
+        throw new Error('Failed to delete invoice.');
     }
+
+    revalidatePath('/dashboard/invoices');
 }
 
 export async function authenticate(
